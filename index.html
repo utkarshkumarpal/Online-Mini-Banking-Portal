@@ -169,6 +169,8 @@
     <h2>Account Listing</h2>
 
     <button class="small-btn" onclick="renderAccounts()">Refresh Accounts</button>
+    <button class="small-btn" onclick="loadSampleAccounts()">Load Sample Accounts</button>
+
 
     <table>
       <thead>
@@ -357,6 +359,19 @@
 
     renderAccounts();
   }
+  
+  function loadSampleAccounts() {
+  accounts = [
+    { accountNo: "1001", holderName: "Utkarsh", balance: 5000, isKYCVerified: true },
+    { accountNo: "1002", holderName: "Aman", balance: 2000, isKYCVerified: false },
+    { accountNo: "1003", holderName: "Riya", balance: 8000, isKYCVerified: true }
+  ];
+
+  showMessage("Sample accounts loaded successfully.");
+  updateDropdowns();
+  renderAccounts();
+}
+
 
   // Initialize default UI
   renderAccounts();
