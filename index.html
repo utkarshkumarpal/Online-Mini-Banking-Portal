@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Online Bank Mini System</title>
+
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f2f6ff;
+      margin: 0;
+      padding: 0;
+    }
+
+    header {
+      background: #1f4bb8;
+      color: white;
+      padding: 15px;
+      text-align: center;
+      font-size: 22px;
+      font-weight: bold;
+    }
+
+    .container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      padding: 20px;
+    }
+
+    .card {
+      background: white;
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+    }
+
+    h2 {
+      margin-top: 0;
+      color: #1f4bb8;
+    }
+
+    label {
+      display: block;
+      margin-top: 10px;
+      font-weight: bold;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+
+    button {
+      margin-top: 12px;
+      width: 100%;
+      padding: 10px;
+      background: #1f4bb8;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 15px;
+    }
+
+    button:hover {
+      background: #163b92;
+    }
+
+    .output {
+      grid-column: span 2;
+      padding: 15px;
+      background: #0b1220;
+      color: #e8f0ff;
+      border-radius: 10px;
+      font-family: monospace;
+      min-height: 120px;
+      overflow-y: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+
+    th, td {
+      padding: 10px;
+      border: 1px solid #ddd;
+      text-align: center;
+    }
+
+    th {
+      background: #1f4bb8;
+      color: white;
+    }
+
+    .small-btn {
+      background: #444;
+      margin-top: 8px;
+    }
+    .small-btn:hover {
+      background: #222;
+    }
+  </style>
+</head>
+
+<body>
+<header>🏦 Online Bank Mini System</header>
+
+<div class="container">
+
+  <!-- Account Creation Screen -->
+  <div class="card">
+    <h2>Create Account</h2>
+
+    <label>Account Number</label>
+    <input type="text" id="accNo" placeholder="e.g. 1001" />
+
+    <label>Holder Name</label>
+    <input type="text" id="holderName" placeholder="e.g. Utkarsh" />
+
+    <label>Initial Balance</label>
+    <input type="number" id="initBal" placeholder="e.g. 5000" />
+
+    <label>KYC Verified?</label>
+    <select id="kycStatus">
+      <option value="true">Yes</option>
+      <option value="false">No</option>
+    </select>
+
+    <button onclick="createAccount()">Create Account</button>
+  </div>
+
+  <!-- Transaction Screen -->
+  <div class="card">
+    <h2>Transactions</h2>
+
+    <label>Select Account</label>
+    <select id="transactionAcc"></select>
+
+    <label>Amount</label>
+    <input type="number" id="amount" placeholder="Enter amount" />
+
+    <button onclick="depositMoney()">Deposit</button>
+    <button onclick="withdrawMoney()">Withdraw</button>
+
+    <hr style="margin:15px 0;">
+
+    <h3 style="color:#1f4bb8;">Transfer Money</h3>
+    <label>Sender Account</label>
+    <select id="senderAcc"></select>
+
+    <label>Receiver Account</label>
+    <select id="receiverAcc"></select>
+
+    <label>Amount</label>
+    <input type="number" id="transferAmount" placeholder="Enter transfer amount" />
+
+    <button onclick="transferMoney()">Transfer</button>
+  </div>
+
+  <!-- Account Listing Screen -->
+  <div class="card" style="grid-column: span 2;">
+    <h2>Account Listing</h2>
+
+    <button class="small-btn" onclick="renderAccounts()">Refresh Accounts</button>
+
+    <table>
+      <thead>
+        <tr>
+          <th>Account No</th>
+          <th>Holder Name</th>
+          <th>Balance</th>
+          <th>KYC Verified</th>
+        </tr>
+      </thead>
+      <tbody id="accountTableBody"></tbody>
+    </table>
+  </div>
+
+  <!-- Output Display Panel -->
+  <div class="output" id="outputPanel">
+    ✅ Output Panel: Messages will appear here...
+  </div>
+
+</div>
+
+<script>
+  // Data Store
+  let accounts = [];
+
+  // Utility to display messages
+  function showMessage(msg, isError = false) {
+    const panel = document.getElementById("outputPanel");
+    const time = new Date().toLocaleTimeString();
+    panel.innerHTML += `<br>[${time}] ${isError ? "❌" : "✅"} ${msg}`;
+    panel.scrollTop = panel.scrollHeight;
+  }
+
+  // Find account by accountNo
+  function getAccount(accNo) {
+    return accounts.find(acc => acc.accountNo === accNo);
+  }
+
+  // Update dropdown options
+  function updateDropdowns() {
+    const dropdowns = ["transactionAcc", "senderAcc", "receiverAcc"];
+    dropdowns.forEach(id => {
+      const dd = document.getElementById(id);
+      dd.innerHTML = "";
+      accounts.forEach(acc => {
+        const option = document.createElement("option");
+        option.value = acc.accountNo;
+        option.textContent = `${acc.accountNo} - ${acc.holderName}`;
+        dd.appendChild(option);
+      });
+    });
+  }
+
+  // Render accounts in table
+  function renderAccounts() {
+    const tbody = document.getElementById("accountTableBody");
+    tbody.innerHTML = "";
+
+    if (accounts.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="4">No accounts created yet.</td></tr>`;
+      return;
+    }
+
+    accounts.forEach(acc => {
+      const row = document.createElement("tr");
+      row.innerHTML = `
+        <td>${acc.accountNo}</td>
+        <td>${acc.holderName}</td>
+        <td>₹${acc.balance.toFixed(2)}</td>
+        <td>${acc.isKYCVerified ? "Yes ✅" : "No ❌"}</td>
+      `;
+      tbody.appendChild(row);
+    });
+  }
+
+  // 1. Create Account
+  function createAccount() {
+    const accNo = document.getElementById("accNo").value.trim();
+    const holderName = document.getElementById("holderName").value.trim();
+    const initBal = parseFloat(document.getElementById("initBal").value);
+    const kycStatus = document.getElementById("kycStatus").value === "true";
+
+    if (!accNo || !holderName || isNaN(initBal)) {
+      showMessage("Please fill all account creation fields correctly.", true);
+      return;
+    }
+
+    if (getAccount(accNo)) {
+      showMessage("Account number already exists!", true);
+      return;
+    }
+
+    if (initBal < 0) {
+      showMessage("Initial balance cannot be negative.", true);
+      return;
+    }
+
+    accounts.push({
+      accountNo: accNo,
+      holderName: holderName,
+      balance: initBal,
+      isKYCVerified: kycStatus
+    });
+
+    showMessage(`Account created successfully for ${holderName} (Acc: ${accNo}).`);
+    updateDropdowns();
+    renderAccounts();
+  }
+
+  // 2. Deposit Money
+  function depositMoney() {
+    const accNo = document.getElementById("transactionAcc").value;
+    const amount = parseFloat(document.getElementById("amount").value);
+
+    if (!accNo || isNaN(amount) || amount <= 0) {
+      showMessage("Enter a valid deposit amount (>0).", true);
+      return;
+    }
+
+    const acc = getAccount(accNo);
+    acc.balance += amount;
+
+    showMessage(`Deposited ₹${amount} into Acc ${accNo}. New Balance: ₹${acc.balance.toFixed(2)}`);
+    renderAccounts();
+  }
+
+  // 3. Withdraw Money
+  function withdrawMoney() {
+    const accNo = document.getElementById("transactionAcc").value;
+    const amount = parseFloat(document.getElementById("amount").value);
+
+    if (!accNo || isNaN(amount) || amount <= 0) {
+      showMessage("Enter a valid withdrawal amount (>0).", true);
+      return;
+    }
+
+    const acc = getAccount(accNo);
+
+    if (acc.balance < amount) {
+      showMessage("Insufficient balance for withdrawal!", true);
+      return;
+    }
+
+    acc.balance -= amount;
+    showMessage(`Withdrawn ₹${amount} from Acc ${accNo}. New Balance: ₹${acc.balance.toFixed(2)}`);
+    renderAccounts();
+  }
+
+  // 4. Transfer Money
+  function transferMoney() {
+    const senderNo = document.getElementById("senderAcc").value;
+    const receiverNo = document.getElementById("receiverAcc").value;
+    const amount = parseFloat(document.getElementById("transferAmount").value);
+
+    if (!senderNo || !receiverNo || isNaN(amount) || amount <= 0) {
+      showMessage("Please enter valid transfer details.", true);
+      return;
+    }
+
+    if (senderNo === receiverNo) {
+      showMessage("Sender and receiver cannot be the same account.", true);
+      return;
+    }
+
+    const sender = getAccount(senderNo);
+    const receiver = getAccount(receiverNo);
+
+    // a. Sender must be KYC verified
+    if (!sender.isKYCVerified) {
+      showMessage("Transfer failed: Sender KYC is NOT verified.", true);
+      return;
+    }
+
+    // b. Sender must have sufficient balance
+    if (sender.balance < amount) {
+      showMessage("Transfer failed: Insufficient balance in sender account.", true);
+      return;
+    }
+
+    // Transfer operation
+    sender.balance -= amount;
+    receiver.balance += amount;
+
+    showMessage(`Transferred ₹${amount} from Acc ${senderNo} to Acc ${receiverNo}.`);
+    showMessage(`Sender Balance: ₹${sender.balance.toFixed(2)} | Receiver Balance: ₹${receiver.balance.toFixed(2)}`);
+
+    renderAccounts();
+  }
+
+  // Initialize default UI
+  renderAccounts();
+</script>
+
+</body>
+</html>
