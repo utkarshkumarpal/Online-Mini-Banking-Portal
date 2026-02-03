@@ -195,6 +195,8 @@
 <script>
   // Data Store
   let accounts = [];
+  let transactions = [];
+
 
   // Utility to display messages
   function showMessage(msg, isError = false) {
@@ -203,6 +205,16 @@
     panel.innerHTML += `<br>[${time}] ${isError ? "❌" : "✅"} ${msg}`;
     panel.scrollTop = panel.scrollHeight;
   }
+
+  function addTransaction(type, details) {
+  transactions.push({
+    time: new Date().toLocaleString(),
+    type: type,
+    details: details
+  });
+}
+
+  
 
   // Find account by accountNo
   function getAccount(accNo) {
@@ -292,6 +304,8 @@
 
     const acc = getAccount(accNo);
     acc.balance += amount;
+    addTransaction("Deposit", `Acc ${accNo} +₹${amount}`);
+
 
     showMessage(`Deposited ₹${amount} into Acc ${accNo}. New Balance: ₹${acc.balance.toFixed(2)}`);
     renderAccounts();
@@ -315,6 +329,8 @@
     }
 
     acc.balance -= amount;
+    addTransaction("Withdraw", `Acc ${accNo} -₹${amount}`);
+
     showMessage(`Withdrawn ₹${amount} from Acc ${accNo}. New Balance: ₹${acc.balance.toFixed(2)}`);
     renderAccounts();
   }
@@ -337,6 +353,7 @@
 
     const sender = getAccount(senderNo);
     const receiver = getAccount(receiverNo);
+    
 
     // a. Sender must be KYC verified
     if (!sender.isKYCVerified) {
@@ -353,13 +370,15 @@
     // Transfer operation
     sender.balance -= amount;
     receiver.balance += amount;
+    addTransaction("Transfer", `₹${amount} from ${senderNo} to ${receiverNo}`);
+
 
     showMessage(`Transferred ₹${amount} from Acc ${senderNo} to Acc ${receiverNo}.`);
     showMessage(`Sender Balance: ₹${sender.balance.toFixed(2)} | Receiver Balance: ₹${receiver.balance.toFixed(2)}`);
 
     renderAccounts();
   }
-  
+
   function loadSampleAccounts() {
   accounts = [
     { accountNo: "1001", holderName: "Utkarsh", balance: 5000, isKYCVerified: true },
