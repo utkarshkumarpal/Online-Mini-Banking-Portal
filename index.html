@@ -148,6 +148,8 @@
 
     <button onclick="depositMoney()">Deposit</button>
     <button onclick="withdrawMoney()">Withdraw</button>
+    <button class="small-btn" onclick="showMiniStatement()">View Mini Statement</button>
+
 
     <hr style="margin:15px 0;">
 
@@ -345,6 +347,22 @@
       showMessage("Please enter valid transfer details.", true);
       return;
     }
+
+    function showMiniStatement() {
+  if (transactions.length === 0) {
+    showMessage("No transactions yet.", true);
+    return;
+  }
+
+  showMessage("---- MINI STATEMENT (Last 5) ----");
+
+  const lastFive = transactions.slice(-5);
+  lastFive.forEach((t, i) => {
+    showMessage(`${i + 1}) ${t.time} | ${t.type} | ${t.details}`);
+  });
+}
+
+    
 
     if (senderNo === receiverNo) {
       showMessage("Sender and receiver cannot be the same account.", true);
